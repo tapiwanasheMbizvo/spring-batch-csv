@@ -7,7 +7,6 @@ import com.tmgreyhat.batch.models.Person;
 import com.tmgreyhat.batch.processes.JobCompletionNotificationListener;
 import com.tmgreyhat.batch.processes.PersonItemProcessor;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -19,13 +18,11 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 // tag::setup[]
 @Configuration
@@ -44,6 +41,20 @@ public class BatchConfiguration {
     public FlatFileItemReader<Person> reader() {
         return new FlatFileItemReaderBuilder<Person>()
                 .name("personItemReader")
+                .resource(new ClassPathResource("sample-data.txt"))
+                .fixedLength()
+                .columns(new Range[]{new Range(1,25), new Range(26,49)})
+                .names(new String[]{"firstName", "lastName"})
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<Person>() {{
+                    setTargetType(Person.class);
+                }})
+                .build();
+    }
+
+   /* @Bean
+    public FlatFileItemReader<Person> reader() {
+        return new FlatFileItemReaderBuilder<Person>()
+                .name("personItemReader")
                 .resource(new ClassPathResource("sample-data.csv"))
                 .delimited()
                 .names(new String[]{"firstName", "lastName"})
@@ -51,7 +62,21 @@ public class BatchConfiguration {
                     setTargetType(Person.class);
                 }})
                 .build();
-    }
+    }*/
+
+
+
+    /*@Bean
+    public FixedLengthTokenizer fixedLengthTokenizer() {
+        FixedLengthTokenizer tokenizer = new FixedLengthTokenizer();
+        tokenizer.setNames("ISIN", "Quantity", "Price", "Customer");
+        tokenizer.setColumns(new Range(1, 12),
+                new Range(13, 15),
+                new Range(16, 20),
+                new Range(21, 29));
+        return tokenizer;
+    }*/
+
 
     @Bean
     public PersonItemProcessor processor() {
